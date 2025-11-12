@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { MapPin, Calendar, Users, Share2, Clock, Trophy, Plus, Minus, Mail, Phone, MessageSquare } from "lucide-react"
 import Link from "next/link"
+import { Header } from "@/components/header"
 
 export default function EventDetailPage({ params }: { params: { id: string } }) {
   const [quantity, setQuantity] = useState(1)
@@ -97,25 +98,7 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
   return (
     <main className="bg-background text-foreground">
       {/* Navigation */}
-      <nav className="flex items-center justify-between px-8 py-6 border-b border-border sticky top-0 bg-background/95 backdrop-blur z-50">
-        <Link href="/" className="text-2xl font-bold text-primary">
-          GoSports
-        </Link>
-        <div className="hidden md:flex gap-8 items-center">
-          <Link href="/events" className="text-sm hover:text-primary transition">
-            Events
-          </Link>
-          <a href="/about" className="text-sm hover:text-primary transition">
-            About Us
-          </a>
-          <a href="/#contact" className="text-sm hover:text-primary transition">
-            Contact
-          </a>
-        </div>
-        <button className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:opacity-90 transition text-sm font-semibold">
-          Buy Tickets
-        </button>
-      </nav>
+     <Header />
 
       {/* Breadcrumb */}
       <div className="px-8 py-4 border-b border-border flex items-center gap-2 text-sm text-muted-foreground">
@@ -216,10 +199,10 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
                   <span className="text-muted-foreground">Ticket Price</span>
                   <span className="font-bold text-lg">{event.price}</span>
                 </div>
-                <div className="flex justify-between items-center">
+                {/* <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Ticket Price</span>
                   <span className="font-bold text-lg">{event.price}</span>
-                </div>
+                </div> */}
                 <div className="border-t border-border pt-3 flex justify-between items-center">
                   <span className="text-muted-foreground font-semibold">Sub Total</span>
                   <span className="font-bold text-lg text-primary">${totalPrice}</span>
