@@ -37,5 +37,6 @@ export const updateEvent = async (id, data) =>
   axios.put(`${API_BASE_URL}/events/${id}`, data, {
     headers: {
       Authorization: `Bearer ${getAuthToken()}`,
+      'Content-Type': 'multipart/form-data',
     },
   });

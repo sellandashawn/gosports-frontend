@@ -3,10 +3,36 @@
 import { useState, useEffect } from "react"
 import { ArrowRight, Calendar, MapPin, Users, Trophy, Mail, Phone, Zap, BarChart3, Heart } from "lucide-react"
 import { Header } from "@/components/header"
+import { getAllEvents } from "../app/api/event";
+import Link from "next/link";
 
 export default function Home() {
   const [timeLeft, setTimeLeft] = useState({ days: 45, hours: 12, minutes: 30, seconds: 45 })
   const [visibleEvents, setVisibleEvents] = useState(6)
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const response = await getAllEvents();
+        console.log("asa", response);
+        if (response && response.events) {
+          setEvents(response.events);
+        } else {
+          console.error("Unexpected response structure:", response);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchEvents();
+    setLoading(false);
+  }, []);
+
+  console.log("Events ", events);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -30,62 +56,62 @@ export default function Home() {
     return () => clearInterval(timer)
   }, [])
 
-  const events = [
-    {
-      id: 1,
-      title: "Urban Marathon",
-      location: "New York City",
-      date: "APR 15-16",
-      month: "April",
-      participants: "2,400",
-      image: "/images/marathon-race-urban-city.jpg",
-    },
-    {
-      id: 2,
-      title: "Beach Volleyball",
-      location: "Miami Beach",
-      date: "MAY 2-4",
-      month: "May",
-      participants: "1,800",
-      image: "/images/beach-volleyball-tournament.jpg",
-    },
-    {
-      id: 3,
-      title: "Mountain Bike Challenge",
-      location: "Colorado Springs",
-      date: "MAY 31-JUN 1",
-      month: "May",
-      participants: "980",
-      image: "/images/mountain-bike-trail-race.jpg",
-    },
-    {
-      id: 4,
-      title: "Triathlon Series",
-      location: "San Francisco",
-      date: "JUN 10-12",
-      month: "June",
-      participants: "1,200",
-      image: "/images/triathlon-swimming-cycling-running.jpg",
-    },
-    {
-      id: 5,
-      title: "Tennis Championship",
-      location: "Los Angeles",
-      date: "JUN 15-20",
-      month: "June",
-      participants: "640",
-      image: "/images/tennis-championship-court.jpg",
-    },
-    {
-      id: 6,
-      title: "CrossFit Games",
-      location: "Austin, Texas",
-      date: "JUL 1-3",
-      month: "July",
-      participants: "1,500",
-      image: "/images/crossfit-competition-athletes.jpg",
-    },
-  ]
+  // const events = [
+  //   {
+  //     id: 1,
+  //     title: "Urban Marathon",
+  //     location: "New York City",
+  //     date: "APR 15-16",
+  //     month: "April",
+  //     participants: "2,400",
+  //     image: "/images/marathon-race-urban-city.jpg",
+  //   },
+  //   {
+  //     id: 2,
+  //     title: "Beach Volleyball",
+  //     location: "Miami Beach",
+  //     date: "MAY 2-4",
+  //     month: "May",
+  //     participants: "1,800",
+  //     image: "/images/beach-volleyball-tournament.jpg",
+  //   },
+  //   {
+  //     id: 3,
+  //     title: "Mountain Bike Challenge",
+  //     location: "Colorado Springs",
+  //     date: "MAY 31-JUN 1",
+  //     month: "May",
+  //     participants: "980",
+  //     image: "/images/mountain-bike-trail-race.jpg",
+  //   },
+  //   {
+  //     id: 4,
+  //     title: "Triathlon Series",
+  //     location: "San Francisco",
+  //     date: "JUN 10-12",
+  //     month: "June",
+  //     participants: "1,200",
+  //     image: "/images/triathlon-swimming-cycling-running.jpg",
+  //   },
+  //   {
+  //     id: 5,
+  //     title: "Tennis Championship",
+  //     location: "Los Angeles",
+  //     date: "JUN 15-20",
+  //     month: "June",
+  //     participants: "640",
+  //     image: "/images/tennis-championship-court.jpg",
+  //   },
+  //   {
+  //     id: 6,
+  //     title: "CrossFit Games",
+  //     location: "Austin, Texas",
+  //     date: "JUL 1-3",
+  //     month: "July",
+  //     participants: "1,500",
+  //     image: "/images/crossfit-competition-athletes.jpg",
+  //   },
+  // ]
 
   const testimonials = [
     {
@@ -262,7 +288,7 @@ export default function Home() {
               </p>
             </div>
             <a
-              href="#"
+              href="/events"
               className="text-primary hover:text-primary/80 transition flex items-center gap-2 font-semibold whitespace-nowrap"
             >
               View All <ArrowRight size={20} />
@@ -278,33 +304,38 @@ export default function Home() {
                 <div className="relative h-64 overflow-hidden bg-muted">
                   <img
                     src={event.image || "/placeholder.svg"}
-                    alt={event.title}
+                    alt={event.eventName}
                     className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                   />
                   <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold">
-                    {event.date}
+                    {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </div>
                   <div className="absolute top-4 left-4 bg-background/80 text-foreground px-3 py-1 rounded-full text-xs font-semibold">
-                    {event.month}
+                    {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
                   </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold mb-3">{event.title}</h3>
+                  <h3 className="text-xl font-bold mb-3">{event.eventName}</h3>
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <MapPin size={16} />
-                      <span className="text-sm">{event.location}</span>
+                      <span className="text-sm">{event.venue}</span>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Users size={16} />
                       <span className="text-sm">
-                        {event.participants} participants
+                        {event.ticketStatus.maximumOccupancy} participants
                       </span>
                     </div>
                   </div>
-                  <button className="w-full bg-primary text-primary-foreground py-2 rounded-lg hover:opacity-90 transition font-semibold text-sm">
-                    Register Event
-                  </button>
+                  <Link
+                    key={event.id}
+                    href={`/events/${event.id}`}
+                    className="bg-card rounded-xl overflow-hidden border border-border hover:border-primary transition group cursor-pointer"
+                  ><button className="w-full bg-primary text-primary-foreground py-2 rounded-lg hover:opacity-90 transition font-semibold text-sm">
+                      Register Event
+                    </button>
+                  </Link>
                 </div>
               </div>
             ))}

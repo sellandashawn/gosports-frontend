@@ -121,6 +121,7 @@ export default function EventDetailPage({ params }: { params: { id: string }; })
   }, [eventId]);
 
   console.log("Event Data:", eventData);
+
   if (!eventData) {
     return <div className="flex justify-center items-center min-h-screen">
       <div className="text-center">
@@ -207,7 +208,7 @@ export default function EventDetailPage({ params }: { params: { id: string }; })
                 {eventData.description}
               </p>
 
-              <h3 className="text-xl font-bold mb-4">What to Expect</h3>
+              {/* <h3 className="text-xl font-bold mb-4">What to Expect</h3>
               <ul className="space-y-3">
                 {eventData?.agenda?.map((detail: string, idx: number) => (
                   <li key={idx} className="flex items-start gap-3">
@@ -215,7 +216,7 @@ export default function EventDetailPage({ params }: { params: { id: string }; })
                     <span className="text-muted-foreground">{detail.time} {detail.activity}</span>
                   </li>
                 ))}
-              </ul>
+              </ul> */}
             </div>
 
             {/* Schedule */}
@@ -293,7 +294,7 @@ export default function EventDetailPage({ params }: { params: { id: string }; })
               </div>
 
               {/* Get Tickets Button */}
-              <Link href={`/events/${eventData.id}/get-tickets`}>
+              <Link href={`/events/${eventData.id}/get-tickets?quantity=${quantity}`}>
                 <button className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:opacity-90 transition font-bold text-lg">
                   GET TICKETS
                 </button>
