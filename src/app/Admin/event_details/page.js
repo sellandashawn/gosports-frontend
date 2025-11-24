@@ -17,6 +17,7 @@ export default function EventDetails() {
   const [eventToEdit, setEventToEdit] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const initialFormData = {
     eventName: '',
@@ -63,8 +64,13 @@ export default function EventDetails() {
           raceCategories: event.raceCategories && event.raceCategories.length > 0 ? event.raceCategories : [''],
           availableTshirtSizes: event.availableTshirtSizes || [],
           agenda: event.agenda && event.agenda.length > 0 ? event.agenda : [{ time: '', activity: '' }],
-          status: event.status || 'upcoming'
+          status: event.status || 'upcoming',
         };
+
+        if (event.image) {
+          setImagePreview(event.image);
+        }
+        setSelectedImage(null);
 
         setFormData(updatedFormData);
 
@@ -179,24 +185,48 @@ export default function EventDetails() {
       setError('Please fill out all race categories or remove empty ones.');
       return;
     }
+    setIsLoading(true);
 
     try {
-      if (eventToEdit) {
-        const response = await updateEvent(eventToEdit, formData);
-        console.log('Event updated:', response);
+      const submitData = new FormData();
 
-        await fetchEvents();
-      } else {
-        const response = await createEvent(formData);
-        console.log('Event created:', response);
-        await fetchEvents();
+      submitData.append('eventName', formData.eventName);
+      submitData.append('venue', formData.venue);
+      submitData.append('date', formData.date);
+      submitData.append('time', formData.time);
+      submitData.append('category', formData.category);
+      submitData.append('description', formData.description);
+      submitData.append('perTicketPrice', formData.perTicketPrice);
+      submitData.append('maximumOccupancy', formData.maximumOccupancy);
+      submitData.append('status', formData.status);
+
+      submitData.append('agenda', JSON.stringify(formData.agenda));
+      submitData.append('raceCategories', JSON.stringify(formData.raceCategories.filter(cat => cat.trim() !== '')));
+      submitData.append('availableTshirtSizes', JSON.stringify(formData.availableTshirtSizes));
+
+      if (selectedImage) {
+        submitData.append('image', selectedImage);
       }
+
+      let response;
+      if (eventToEdit) {
+        response = await updateEvent(eventToEdit, submitData);
+        console.log('Event updated:', response);
+      } else {
+        response = await createEvent(submitData);
+        console.log('Event created:', response);
+      }
+
+      await fetchEvents();
       resetForm();
 
     } catch (err) {
       console.error('Error creating/updating event:', err);
       setError('Failed to create/update event. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
+
   };
 
   const fetchEvents = async () => {
@@ -217,6 +247,8 @@ export default function EventDetails() {
     setFormData(initialFormData);
     setShowForm(false);
     setEventToEdit(null);
+    setSelectedImage(null);
+    setImagePreview('');
     setError('');
   };
 
@@ -743,12 +775,22 @@ export default function EventDetails() {
                       >
                         <X size={16} />
                       </button>
+                      {!selectedImage && eventToEdit && (
+                        <span className="absolute top-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs rounded-full">
+                          Existing Image
+                        </span>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center">
                       <Upload className={`mx-auto mb-3 ${dragActive ? 'text-primary/80' : 'text-slate-400'}`} size={32} />
                       <p className="text-sm font-medium text-slate-700">Drag and drop your image here</p>
                       <p className="text-xs text-slate-500 mt-1">or click to browse (Max: 5MB)</p>
+                      {eventToEdit && (
+                        <p className="text-xs text-blue-500 mt-2">
+                          Current image will be kept if no new image is selected
+                        </p>
+                      )}
                     </div>
                   )}
                   <input
@@ -777,9 +819,11 @@ export default function EventDetails() {
               <div className="flex gap-4 pt-4">
                 <button
                   onClick={handleSubmit}
-                  className="flex-1 py-3 bg-primary/90 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-95 hover:bg-primary/80"
+                  disabled={isLoading}
+                  className={`flex-1 py-3 bg-primary/90 text-white font-semibold rounded-lg transition-all ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:shadow-primary/30 hover:bg-primary/80 active:scale-95'
+                    }`}
                 >
-                  {eventToEdit ? 'Update Event' : 'Create Event'}
+                  {isLoading ? 'Processing...' : (eventToEdit ? 'Update Event' : 'Create Event')}
                 </button>
                 <button
                   type="button"
