@@ -21,8 +21,5 @@ export const getEventParticipants = async (eventId = null) => {
         : `${API_BASE_URL}/tickets/participants`;
 
     return axios.get(url, {
-        headers: {
-            Authorization: `Bearer ${getAuthToken()}`,
-        },
-    });
+
 };
