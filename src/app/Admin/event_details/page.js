@@ -1,47 +1,69 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Upload, Calendar, MapPin, FileText, Tag, Edit, Trash2, Plus, Search, ChevronDown, Clock, Users, Ticket, Shirt, X } from 'lucide-react';
-import { createEvent, getAllEvents, deleteEvent, updateEvent, getEventById } from '../../api/event';
+import React, { useState, useEffect } from "react";
+import {
+  Upload,
+  Calendar,
+  MapPin,
+  FileText,
+  Tag,
+  Edit,
+  Trash2,
+  Plus,
+  Search,
+  ChevronDown,
+  Clock,
+  Users,
+  Ticket,
+  Shirt,
+  X,
+} from "lucide-react";
+import {
+  createEvent,
+  getAllEvents,
+  deleteEvent,
+  updateEvent,
+  getEventById,
+} from "../../api/event";
 
 export default function EventDetails() {
   const [showForm, setShowForm] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('All Status');
-  const [categoryFilter, setCategoryFilter] = useState('All Category');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [categoryFilter, setCategoryFilter] = useState("All Category");
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [events, setEvents] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [eventToEdit, setEventToEdit] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
+  const [imagePreview, setImagePreview] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const initialFormData = {
-    eventName: '',
-    venue: '',
-    date: '',
-    time: '',
-    category: '',
-    description: '',
-    perTicketPrice: '',
-    maximumOccupancy: '',
-    raceCategories: [''],
-    availableTshirtSizes: [],
-    agenda: [{ time: '', activity: '' }],
-    status: 'upcoming'
+    eventName: "",
+    venue: "",
+    date: "",
+    time: "",
+    category: "",
+    description: "",
+    perTicketPrice: "",
+    maximumOccupancy: "",
+    raceCategories: ["Race A", "Race B"],
+    availableTshirtSizes: ["XS", "S"],
+    agenda: [{ time: "", activity: "" }],
+    status: "upcoming",
   };
 
   const [formData, setFormData] = useState(initialFormData);
 
   const statusOptions = [
-    { value: 'upcoming', label: 'Upcoming' },
-    { value: 'ongoing', label: 'Ongoing' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
-    { value: 'postponed', label: 'Postponed' }
+    { value: "upcoming", label: "Upcoming" },
+    { value: "ongoing", label: "Ongoing" },
+    { value: "completed", label: "Completed" },
+    { value: "cancelled", label: "Cancelled" },
+    { value: "postponed", label: "Postponed" },
   ];
 
   const fetchEventById = async (eventId) => {
@@ -50,21 +72,29 @@ export default function EventDetails() {
 
       if (response.event) {
         const event = response.event;
-        const formattedDate = event.date ? new Date(event.date).toISOString().split('T')[0] : '';
+        const formattedDate = event.date
+          ? new Date(event.date).toISOString().split("T")[0]
+          : "";
 
         const updatedFormData = {
-          eventName: event.eventName || '',
-          venue: event.venue || '',
+          eventName: event.eventName || "",
+          venue: event.venue || "",
           date: formattedDate,
-          time: event.time || '',
-          category: event.category || '',
-          description: event.description || '',
-          perTicketPrice: event.perTicketPrice || '',
-          maximumOccupancy: event.ticketStatus?.maximumOccupancy || '',
-          raceCategories: event.raceCategories && event.raceCategories.length > 0 ? event.raceCategories : [''],
+          time: event.time || "",
+          category: event.category || "",
+          description: event.description || "",
+          perTicketPrice: event.perTicketPrice || "",
+          maximumOccupancy: event.ticketStatus?.maximumOccupancy || "",
+          raceCategories:
+            event.raceCategories && event.raceCategories.length > 0
+              ? event.raceCategories
+              : [""],
           availableTshirtSizes: event.availableTshirtSizes || [],
-          agenda: event.agenda && event.agenda.length > 0 ? event.agenda : [{ time: '', activity: '' }],
-          status: event.status || 'upcoming',
+          agenda:
+            event.agenda && event.agenda.length > 0
+              ? event.agenda
+              : [{ time: "", activity: "" }],
+          status: event.status || "upcoming",
         };
 
         if (event.image) {
@@ -76,18 +106,18 @@ export default function EventDetails() {
 
         setShowForm(true);
         setEventToEdit(eventId);
-        setError('');
+        setError("");
       }
     } catch (err) {
-      console.error('Error fetching event:', err);
-      setError('Failed to fetch event details');
+      console.error("Error fetching event:", err);
+      setError("Failed to fetch event details");
     }
   };
 
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragActive(e.type === 'dragenter' || e.type === 'dragover');
+    setDragActive(e.type === "dragenter" || e.type === "dragover");
   };
 
   const handleDrop = (e) => {
@@ -100,7 +130,7 @@ export default function EventDetails() {
   };
 
   const handleImageSelect = (file) => {
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith("image/")) {
       setSelectedImage(file);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -118,71 +148,87 @@ export default function EventDetails() {
 
   const removeImage = () => {
     setSelectedImage(null);
-    setImagePreview('');
+    setImagePreview("");
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleArrayChange = (index, value, field) => {
     const newArray = [...formData[field]];
     newArray[index] = value;
-    setFormData(prev => ({ ...prev, [field]: newArray }));
+    setFormData((prev) => ({ ...prev, [field]: newArray }));
   };
 
   const addArrayItem = (field) => {
-    setFormData(prev => ({ ...prev, [field]: [...prev[field], ''] }));
+    setFormData((prev) => ({ ...prev, [field]: [...prev[field], ""] }));
   };
 
   const removeArrayItem = (index, field) => {
     const newArray = formData[field].filter((_, i) => i !== index);
-    setFormData(prev => ({ ...prev, [field]: newArray }));
+    setFormData((prev) => ({ ...prev, [field]: newArray }));
   };
 
   const handleAgendaChange = (index, field, value) => {
     const newAgenda = [...formData.agenda];
     newAgenda[index] = { ...newAgenda[index], [field]: value };
-    setFormData(prev => ({ ...prev, agenda: newAgenda }));
+    setFormData((prev) => ({ ...prev, agenda: newAgenda }));
   };
 
   const addAgendaItem = () => {
-    setFormData(prev => ({ ...prev, agenda: [...prev.agenda, { time: '', activity: '' }] }));
+    setFormData((prev) => ({
+      ...prev,
+      agenda: [...prev.agenda, { time: "", activity: "" }],
+    }));
   };
 
   const removeAgendaItem = (index) => {
     const newAgenda = formData.agenda.filter((_, i) => i !== index);
-    setFormData(prev => ({ ...prev, agenda: newAgenda }));
+    setFormData((prev) => ({ ...prev, agenda: newAgenda }));
   };
 
   const handleTshirtSizeChange = (size) => {
     const currentSizes = formData.availableTshirtSizes;
     const newSizes = currentSizes.includes(size)
-      ? currentSizes.filter(s => s !== size)
+      ? currentSizes.filter((s) => s !== size)
       : [...currentSizes, size];
-    setFormData(prev => ({ ...prev, availableTshirtSizes: newSizes }));
+    setFormData((prev) => ({ ...prev, availableTshirtSizes: newSizes }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
-    if (!formData.eventName || !formData.venue || !formData.date || !formData.time ||
-      !formData.category || !formData.perTicketPrice || !formData.maximumOccupancy) {
-      setError('Please fill in all required fields');
+    if (
+      !formData.eventName ||
+      !formData.venue ||
+      !formData.date ||
+      !formData.time ||
+      !formData.category ||
+      !formData.perTicketPrice ||
+      !formData.maximumOccupancy
+    ) {
+      setError("Please fill in all required fields");
       return;
     }
 
-    const invalidAgendaItems = formData.agenda.some(item => !item.time || !item.activity);
+    const invalidAgendaItems = formData.agenda.some(
+      (item) => !item.time || !item.activity
+    );
     if (invalidAgendaItems) {
-      setError('Please fill out both time and activity for all agenda items or remove empty ones.');
+      setError(
+        "Please fill out both time and activity for all agenda items or remove empty ones."
+      );
       return;
     }
 
-    const emptyRaceCategories = formData.raceCategories.some(category => !category);
+    const emptyRaceCategories = formData.raceCategories.some(
+      (category) => !category
+    );
     if (emptyRaceCategories) {
-      setError('Please fill out all race categories or remove empty ones.');
+      setError("Please fill out all race categories or remove empty ones.");
       return;
     }
     setIsLoading(true);
@@ -190,43 +236,49 @@ export default function EventDetails() {
     try {
       const submitData = new FormData();
 
-      submitData.append('eventName', formData.eventName);
-      submitData.append('venue', formData.venue);
-      submitData.append('date', formData.date);
-      submitData.append('time', formData.time);
-      submitData.append('category', formData.category);
-      submitData.append('description', formData.description);
-      submitData.append('perTicketPrice', formData.perTicketPrice);
-      submitData.append('maximumOccupancy', formData.maximumOccupancy);
-      submitData.append('status', formData.status);
+      submitData.append("eventName", formData.eventName);
+      submitData.append("venue", formData.venue);
+      submitData.append("date", formData.date);
+      submitData.append("time", formData.time);
+      submitData.append("category", formData.category);
+      submitData.append("description", formData.description);
+      submitData.append("perTicketPrice", formData.perTicketPrice);
+      submitData.append("maximumOccupancy", formData.maximumOccupancy);
+      submitData.append("status", formData.status);
 
-      submitData.append('agenda', JSON.stringify(formData.agenda));
-      submitData.append('raceCategories', JSON.stringify(formData.raceCategories.filter(cat => cat.trim() !== '')));
-      submitData.append('availableTshirtSizes', JSON.stringify(formData.availableTshirtSizes));
+      submitData.append("agenda", JSON.stringify(formData.agenda));
+      submitData.append(
+        "raceCategories",
+        JSON.stringify(
+          formData.raceCategories.filter((cat) => cat.trim() !== "")
+        )
+      );
+      submitData.append(
+        "availableTshirtSizes",
+        JSON.stringify(formData.availableTshirtSizes)
+      );
 
       if (selectedImage) {
-        submitData.append('image', selectedImage);
+        submitData.append("image", selectedImage);
       }
 
       let response;
       if (eventToEdit) {
         response = await updateEvent(eventToEdit, submitData);
-        console.log('Event updated:', response);
+        console.log("Event updated:", response);
       } else {
         response = await createEvent(submitData);
-        console.log('Event created:', response);
+        console.log("Event created:", response);
       }
 
       await fetchEvents();
       resetForm();
-
     } catch (err) {
-      console.error('Error creating/updating event:', err);
-      setError('Failed to create/update event. Please try again.');
+      console.error("Error creating/updating event:", err);
+      setError("Failed to create/update event. Please try again.");
     } finally {
       setIsLoading(false);
     }
-
   };
 
   const fetchEvents = async () => {
@@ -234,8 +286,8 @@ export default function EventDetails() {
       const response = await getAllEvents();
       setEvents(response.events || []);
     } catch (err) {
-      console.error('Error fetching events:', err);
-      setError('Failed to fetch events');
+      console.error("Error fetching events:", err);
+      setError("Failed to fetch events");
     }
   };
 
@@ -248,12 +300,12 @@ export default function EventDetails() {
     setShowForm(false);
     setEventToEdit(null);
     setSelectedImage(null);
-    setImagePreview('');
-    setError('');
+    setImagePreview("");
+    setError("");
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this event?')) {
+    if (!window.confirm("Are you sure you want to delete this event?")) {
       return;
     }
     try {
@@ -261,24 +313,32 @@ export default function EventDetails() {
       console.log(`Event with ID ${id} deleted successfully.`);
       await fetchEvents();
     } catch (err) {
-      console.error('Error deleting event:', err);
-      setError('Failed to delete event. Please try again.');
+      console.error("Error deleting event:", err);
+      setError("Failed to delete event. Please try again.");
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'ongoing': return 'bg-green-100 text-green-800';
-      case 'upcoming': return 'bg-yellow-100 text-yellow-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'postponed': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "ongoing":
+        return "bg-green-100 text-green-800";
+      case "upcoming":
+        return "bg-yellow-100 text-yellow-800";
+      case "completed":
+        return "bg-blue-100 text-blue-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      case "postponed":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const formatStatus = (status) => {
-    return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
+    return status
+      ? status.charAt(0).toUpperCase() + status.slice(1)
+      : "Unknown";
   };
 
   useEffect(() => {
@@ -288,19 +348,26 @@ export default function EventDetails() {
   const filteredEvents = events.filter((event) => {
     if (!event) return false;
 
-    const eventName = event.eventName || '';
-    const eventStatus = event.status || '';
-    const eventCategory = event.category || '';
+    const eventName = event.eventName || "";
+    const eventStatus = event.status || "";
+    const eventCategory = event.category || "";
 
-    const matchesSearch = eventName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'All Status' || eventStatus === statusFilter;
-    const matchesCategory = categoryFilter === 'All Category' || eventCategory === categoryFilter;
+    const matchesSearch = eventName
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "All Status" || eventStatus === statusFilter;
+    const matchesCategory =
+      categoryFilter === "All Category" || eventCategory === categoryFilter;
 
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
   const totalPages = Math.ceil(filteredEvents.length / itemsPerPage);
-  const currentPageEvents = filteredEvents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const currentPageEvents = filteredEvents.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
@@ -308,7 +375,7 @@ export default function EventDetails() {
     }
   };
 
-  const tshirtSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  const tshirtSizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
@@ -321,7 +388,9 @@ export default function EventDetails() {
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-primary/90 to-primary/70 bg-clip-text text-transparent mb-2">
                   Event Details
                 </h1>
-                <p className="text-slate-600">Manage and track all your events</p>
+                <p className="text-slate-600">
+                  Manage and track all your events
+                </p>
               </div>
               <button
                 onClick={() => {
@@ -339,7 +408,10 @@ export default function EventDetails() {
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
               <div className="flex gap-4 items-center">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-3 text-slate-400" size={20} />
+                  <Search
+                    className="absolute left-3 top-3 text-slate-400"
+                    size={20}
+                  />
                   <input
                     type="text"
                     placeholder="Search events..."
@@ -355,13 +427,16 @@ export default function EventDetails() {
                     className="text-black appearance-none px-4 py-2 pr-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/60 cursor-pointer"
                   >
                     <option>All Status</option>
-                    {statusOptions.map(option => (
+                    {statusOptions.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-2 top-2.5 text-slate-400 pointer-events-none" size={18} />
+                  <ChevronDown
+                    className="absolute right-2 top-2.5 text-slate-400 pointer-events-none"
+                    size={18}
+                  />
                 </div>
                 <div className="relative">
                   <select
@@ -375,7 +450,10 @@ export default function EventDetails() {
                     <option value="Symposium">Symposium</option>
                     <option value="Sports">Sports</option>
                   </select>
-                  <ChevronDown className="absolute right-2 top-2.5 text-slate-400 pointer-events-none" size={18} />
+                  <ChevronDown
+                    className="absolute right-2 top-2.5 text-slate-400 pointer-events-none"
+                    size={18}
+                  />
                 </div>
               </div>
             </div>
@@ -386,30 +464,52 @@ export default function EventDetails() {
                 <table className="w-full">
                   <thead className="bg-gradient-to-r from-slate-100 to-slate-50 border-b border-slate-200">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Event</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Date & Time</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Category</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Status</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Ticket Price</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Venue</th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-slate-700">Action</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                        Event
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                        Date & Time
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                        Category
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                        Ticket Price
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                        Venue
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-slate-700">
+                        Action
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
                     {currentPageEvents.length > 0 ? (
                       currentPageEvents.map((event) => (
-                        <tr key={event.id} className="hover:bg-slate-50 transition-colors">
+                        <tr
+                          key={event.id}
+                          className="hover:bg-slate-50 transition-colors"
+                        >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-primary/80 rounded-lg flex items-center justify-center">
                                 <FileText size={20} className="text-white" />
                               </div>
                               <div>
-                                <span className="text-sm font-medium text-slate-900 block">{event.eventName}</span>
+                                <span className="text-sm font-medium text-slate-900 block">
+                                  {event.eventName}
+                                </span>
                                 <div className="flex items-center gap-2 mt-1">
                                   <Users size={14} className="text-slate-400" />
                                   <span className="text-xs text-slate-500">
-                                    {event.ticketStatus?.totalNumberOfPlayers || 0}/{event.ticketStatus?.maximumOccupancy || 0} players
+                                    {event.ticketStatus?.totalNumberOfPlayers ||
+                                      0}
+                                    /{event.ticketStatus?.maximumOccupancy || 0}{" "}
+                                    players
                                   </span>
                                 </div>
                               </div>
@@ -417,22 +517,36 @@ export default function EventDetails() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm text-slate-600">
-                              <div>{event.date ? new Date(event.date).toLocaleDateString() : 'N/A'}</div>
-                              <div className="text-slate-500">{event.time || 'N/A'}</div>
+                              <div>
+                                {event.date
+                                  ? new Date(event.date).toLocaleDateString()
+                                  : "N/A"}
+                              </div>
+                              <div className="text-slate-500">
+                                {event.time || "N/A"}
+                              </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{event.category || 'N/A'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600">
+                            {event.category || "N/A"}
+                          </td>
                           <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(event.status)}`}>
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                                event.status
+                              )}`}
+                            >
                               {formatStatus(event.status)}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-slate-600">
                             <div className="flex items-center gap-1">
-                              $ {event.perTicketPrice || '0.00'}
+                              $ {event.perTicketPrice || "0.00"}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{event.venue || 'N/A'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600">
+                            {event.venue || "N/A"}
+                          </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center gap-2">
                               <button
@@ -455,7 +569,10 @@ export default function EventDetails() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="7" className="px-6 py-8 text-center text-slate-500">
+                        <td
+                          colSpan="7"
+                          className="px-6 py-8 text-center text-slate-500"
+                        >
                           No events found.
                         </td>
                       </tr>
@@ -493,9 +610,12 @@ export default function EventDetails() {
             {/* Create or Update Event Form */}
             <div className="mb-8">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-primary/90 to-primary/70 bg-clip-text text-transparent mb-2">
-                {eventToEdit ? 'Update Event' : 'Create Event'}
+                {eventToEdit ? "Update Event" : "Create Event"}
               </h1>
-              <p className="text-slate-600">Fill in the details to {eventToEdit ? 'update' : 'create'} the event</p>
+              <p className="text-slate-600">
+                Fill in the details to {eventToEdit ? "update" : "create"} the
+                event
+              </p>
             </div>
 
             {/* Form Card */}
@@ -509,9 +629,14 @@ export default function EventDetails() {
 
               {/* Event Name */}
               <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-3">Event Name *</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  Event Name *
+                </label>
                 <div className="relative">
-                  <FileText className="absolute left-3 top-3.5 text-slate-400" size={20} />
+                  <FileText
+                    className="absolute left-3 top-3.5 text-slate-400"
+                    size={20}
+                  />
                   <input
                     type="text"
                     name="eventName"
@@ -526,9 +651,14 @@ export default function EventDetails() {
 
               {/* Venue */}
               <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-3">Venue *</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  Venue *
+                </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-3.5 text-slate-400" size={20} />
+                  <MapPin
+                    className="absolute left-3 top-3.5 text-slate-400"
+                    size={20}
+                  />
                   <input
                     type="text"
                     name="venue"
@@ -544,9 +674,14 @@ export default function EventDetails() {
               {/* Date & Time Row */}
               <div className="grid grid-cols-2 gap-6">
                 <div className="group">
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">Date *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                    Date *
+                  </label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-3.5 text-slate-400" size={20} />
+                    <Calendar
+                      className="absolute left-3 top-3.5 text-slate-400"
+                      size={20}
+                    />
                     <input
                       type="date"
                       name="date"
@@ -559,9 +694,14 @@ export default function EventDetails() {
                 </div>
 
                 <div className="group">
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">Time *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                    Time *
+                  </label>
                   <div className="relative">
-                    <Clock className="absolute left-3 top-3.5 text-slate-400" size={20} />
+                    <Clock
+                      className="absolute left-3 top-3.5 text-slate-400"
+                      size={20}
+                    />
                     <input
                       type="time"
                       name="time"
@@ -577,9 +717,14 @@ export default function EventDetails() {
               {/* Category & Status Row */}
               <div className="grid grid-cols-2 gap-6">
                 <div className="group">
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">Category *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                    Category *
+                  </label>
                   <div className="relative">
-                    <Tag className="absolute left-3 top-3.5 text-slate-400" size={20} />
+                    <Tag
+                      className="absolute left-3 top-3.5 text-slate-400"
+                      size={20}
+                    />
                     <select
                       name="category"
                       value={formData.category}
@@ -596,8 +741,10 @@ export default function EventDetails() {
                   </div>
                 </div>
 
-                <div className="group">
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">Status *</label>
+                {/* <div className="group">
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                    Status *
+                  </label>
                   <div className="relative">
                     <select
                       name="status"
@@ -606,23 +753,31 @@ export default function EventDetails() {
                       className="text-black w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/60 focus:bg-white transition-all appearance-none cursor-pointer"
                       required
                     >
-                      {statusOptions.map(option => (
+                      {statusOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-3.5 text-slate-400 pointer-events-none" size={18} />
+                    <ChevronDown
+                      className="absolute right-3 top-3.5 text-slate-400 pointer-events-none"
+                      size={18}
+                    />
                   </div>
-                </div>
+                </div> */}
               </div>
 
               {/* Ticket Price & Maximum Occupancy Row */}
               <div className="grid grid-cols-2 gap-6">
                 <div className="group">
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">Ticket Price ($) *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                    Ticket Price ($) *
+                  </label>
                   <div className="relative">
-                    <Ticket className="absolute left-3 top-3.5 text-slate-400" size={20} />
+                    <Ticket
+                      className="absolute left-3 top-3.5 text-slate-400"
+                      size={20}
+                    />
                     <input
                       type="number"
                       name="perTicketPrice"
@@ -638,9 +793,14 @@ export default function EventDetails() {
                 </div>
 
                 <div className="group">
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">Maximum Occupancy *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                    Maximum Occupancy *
+                  </label>
                   <div className="relative">
-                    <Users className="absolute left-3 top-3.5 text-slate-400" size={20} />
+                    <Users
+                      className="absolute left-3 top-3.5 text-slate-400"
+                      size={20}
+                    />
                     <input
                       type="number"
                       name="maximumOccupancy"
@@ -656,7 +816,7 @@ export default function EventDetails() {
               </div>
 
               {/* Race Categories */}
-              <div className="group">
+              {/* <div className="group">
                 <label className="block text-sm font-semibold text-slate-700 mb-3">Race Categories</label>
                 {formData.raceCategories.map((category, index) => (
                   <div key={index} className="flex gap-2 mb-2">
@@ -686,44 +846,53 @@ export default function EventDetails() {
                   <Plus size={16} />
                   Add Race Category
                 </button>
-              </div>
+              </div> */}
 
               {/* Available T-Shirt Sizes */}
-              <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-3">Available T-Shirt Sizes</label>
+              {/* <div className="group">
+                <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  Available T-Shirt Sizes
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {tshirtSizes.map((size) => (
                     <button
                       key={size}
                       type="button"
                       onClick={() => handleTshirtSizeChange(size)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${formData.availableTshirtSizes.includes(size)
-                        ? 'bg-primary/90 text-white border-primary/90'
-                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-                        }`}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                        formData.availableTshirtSizes.includes(size)
+                          ? "bg-primary/90 text-white border-primary/90"
+                          : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                      }`}
                     >
                       <Shirt size={16} />
                       {size}
                     </button>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
               {/* Agenda */}
               <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-3">Event Agenda</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  Event Agenda
+                </label>
                 {formData.agenda.map((item, index) => (
                   <div key={index} className="grid grid-cols-4 gap-2 mb-2">
                     <input
                       type="time"
                       value={item.time}
-                      onChange={(e) => handleAgendaChange(index, 'time', e.target.value)}
+                      onChange={(e) =>
+                        handleAgendaChange(index, "time", e.target.value)
+                      }
                       className="text-black px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/60 focus:bg-white transition-all"
                     />
                     <input
                       type="text"
                       value={item.activity}
-                      onChange={(e) => handleAgendaChange(index, 'activity', e.target.value)}
+                      onChange={(e) =>
+                        handleAgendaChange(index, "activity", e.target.value)
+                      }
                       placeholder="Activity description"
                       className="text-black col-span-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/60 focus:bg-white transition-all"
                     />
@@ -750,16 +919,19 @@ export default function EventDetails() {
 
               {/* Image Upload */}
               <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-3">Event Image</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  Event Image
+                </label>
                 <div
                   onDragEnter={handleDrag}
                   onDragLeave={handleDrag}
                   onDragOver={handleDrag}
                   onDrop={handleDrop}
-                  className={`relative p-8 border-2 border-dashed rounded-xl transition-all ${dragActive
-                    ? 'border-primary/80 bg-primary/10'
-                    : 'border-slate-300 bg-slate-50 hover:border-slate-400'
-                    }`}
+                  className={`relative p-8 border-2 border-dashed rounded-xl transition-all ${
+                    dragActive
+                      ? "border-primary/80 bg-primary/10"
+                      : "border-slate-300 bg-slate-50 hover:border-slate-400"
+                  }`}
                 >
                   {imagePreview ? (
                     <div className="relative">
@@ -783,9 +955,18 @@ export default function EventDetails() {
                     </div>
                   ) : (
                     <div className="text-center">
-                      <Upload className={`mx-auto mb-3 ${dragActive ? 'text-primary/80' : 'text-slate-400'}`} size={32} />
-                      <p className="text-sm font-medium text-slate-700">Drag and drop your image here</p>
-                      <p className="text-xs text-slate-500 mt-1">or click to browse (Max: 5MB)</p>
+                      <Upload
+                        className={`mx-auto mb-3 ${
+                          dragActive ? "text-primary/80" : "text-slate-400"
+                        }`}
+                        size={32}
+                      />
+                      <p className="text-sm font-medium text-slate-700">
+                        Drag and drop your image here
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        or click to browse (Max: 5MB)
+                      </p>
                       {eventToEdit && (
                         <p className="text-xs text-blue-500 mt-2">
                           Current image will be kept if no new image is selected
@@ -804,7 +985,9 @@ export default function EventDetails() {
 
               {/* Description */}
               <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-3">About The Event</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  About The Event
+                </label>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -820,10 +1003,17 @@ export default function EventDetails() {
                 <button
                   onClick={handleSubmit}
                   disabled={isLoading}
-                  className={`flex-1 py-3 bg-primary/90 text-white font-semibold rounded-lg transition-all ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:shadow-primary/30 hover:bg-primary/80 active:scale-95'
-                    }`}
+                  className={`flex-1 py-3 bg-primary/90 text-white font-semibold rounded-lg transition-all ${
+                    isLoading
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:shadow-lg hover:shadow-primary/30 hover:bg-primary/80 active:scale-95"
+                  }`}
                 >
-                  {isLoading ? 'Processing...' : (eventToEdit ? 'Update Event' : 'Create Event')}
+                  {isLoading
+                    ? "Processing..."
+                    : eventToEdit
+                    ? "Update Event"
+                    : "Create Event"}
                 </button>
                 <button
                   type="button"
