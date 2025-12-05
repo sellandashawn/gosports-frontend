@@ -18,6 +18,7 @@ export const registerParticipantWithPayment = async (eventId, data) =>
     }
   );
 
+
 export const getEventParticipants = async (eventId = null) => {
   const url = eventId
     ? `${API_BASE_URL}/tickets/participants?eventId=${eventId}`
