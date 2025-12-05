@@ -669,9 +669,21 @@ export default function DashBoard() {
   };
 
   const toggleAggregateView = () => {
-    setShowAggregateView(!showAggregateView);
-    if (!showAggregateView) {
+    const newShowAggregateView = !showAggregateView;
+    setShowAggregateView(newShowAggregateView);
+
+    if (!newShowAggregateView) {
       setSelectedEvent(null);
+      setStats(defaultStats);
+    } else {
+      setSelectedEvent(null);
+
+      if (filteredEvents.length > 0 && aggregatedStats) {
+        const newStats = getEventStats(null, [], aggregatedStats);
+        setStats(newStats);
+      } else {
+        setStats(defaultStats);
+      }
     }
   };
 
@@ -737,31 +749,30 @@ export default function DashBoard() {
             </div>
 
             {/* <div className="flex gap-4">
-                            {filteredEvents.length > 0 && (
-                                <button
-                                    onClick={toggleAggregateView}
-                                    className={`flex items-center gap-2 px-4 py-2 font-semibold rounded-lg transition-all ${showAggregateView
-                                        ? 'flex items-center bg-primary/90 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-primary/30 transition-all hover:bg-primary/80'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                        }`}
-                                >
-                                    <BarChartIcon size={16} />
-                                    {showAggregateView ? 'View Specific Events' : 'View Overall View'}
-                                </button>
-                            )}
-                            <button
-                                className="flex items-center gap-2 px-6 py-3 bg-primary/90 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-primary/30 transition-all hover:bg-primary/80"
-                            >
-                                <Eye size={20} />
-                                Preview
-                            </button>
-                            <button
-                                className="flex items-center gap-2 px-6 py-3 bg-primary/90 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-primary/30 transition-all hover:bg-primary/80"
-                            >
-                                <Download size={20} />
-                                Download
-                            </button>
-                        </div> */}
+              {filteredEvents.length > 0 && (
+                <button
+                  onClick={toggleAggregateView}
+                  className={`flex items-center gap-2 px-4 py-2 font-semibold rounded-lg transition-all ${
+                    showAggregateView
+                      ? "flex items-center bg-primary/90 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-primary/30 transition-all hover:bg-primary/80"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  <BarChartIcon size={16} />
+                  {showAggregateView
+                    ? "View Specific Events"
+                    : "View Overall View"}
+                </button>
+              )}
+              <button className="flex items-center gap-2 px-6 py-3 bg-primary/90 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-primary/30 transition-all hover:bg-primary/80">
+                <Eye size={20} />
+                Preview
+              </button>
+              <button className="flex items-center gap-2 px-6 py-3 bg-primary/90 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-primary/30 transition-all hover:bg-primary/80">
+                <Download size={20} />
+                Download
+              </button>
+            </div> */}
           </div>
 
           <div className="flex gap-4 ">
@@ -923,19 +934,17 @@ export default function DashBoard() {
               {filteredEvents.length > 0 && (
                 <button
                   onClick={toggleAggregateView}
-                  disabled
-                  className={`flex items-center gap-2 px-4 py-2 font-semibold rounded-lg transition-all cursor-not-allowed opacity-50 ${
+                  className={`flex items-center gap-2 px-4 py-2 font-semibold rounded-lg transition-all ${
                     showAggregateView
-                      ? "flex items-center bg-primary/90 text-white font-semibold rounded-lg"
-                      : "bg-gray-200 text-gray-700"
+                      ? "flex items-center bg-primary/90 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-primary/30 transition-all hover:bg-primary/80"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
                   <BarChartIcon size={16} />
-                  {showAggregateView ? "Preview" : "Preview"}
+                  {showAggregateView ? "View Events" : "View Overall"}
                 </button>
               )}
             </div>
-
             <div className="rounded-2xl border border-primary/20 overflow-hidden bg-slate-50">
               <div className="max-h-80 overflow-y-auto">
                 <table className="w-full text-left text-sm text-slate-800">
