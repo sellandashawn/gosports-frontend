@@ -290,7 +290,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Events - Next 3 Months */}
       <section id="events" className="py-24 px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-16">
@@ -408,7 +407,6 @@ export default function Home() {
           )}
         </div>
       </section>
-
       {/* Why Choose GoSports */}
       <section className="py-24 px-8 bg-card border-y border-border">
         <div className="max-w-7xl mx-auto">
@@ -651,7 +649,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-8 bg-primary text-primary-foreground">
+      {/* <section className="py-24 px-8 bg-primary text-primary-foreground">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-bold mb-6">Ready to Join the Action?</h2>
           <p className="text-lg mb-8 opacity-95">
@@ -667,95 +665,9 @@ export default function Home() {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border py-16 px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
-            <div>
-              <h4 className="font-bold mb-4">GoSports</h4>
-              <p className="text-muted-foreground text-sm">
-                Connecting athletes and events worldwide
-              </p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Product</h4>
-              <ul className="space-y-2 text-muted-foreground text-sm">
-                <li>
-                  <a href="#" className="hover:text-primary transition">
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition">
-                    Pricing
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition">
-                    Security
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Company</h4>
-              <ul className="space-y-2 text-muted-foreground text-sm">
-                <li>
-                  <a href="#" className="hover:text-primary transition">
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition">
-                    Careers
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Legal</h4>
-              <ul className="space-y-2 text-muted-foreground text-sm">
-                <li>
-                  <a href="#" className="hover:text-primary transition">
-                    Privacy
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition">
-                    Terms
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary transition">
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-border pt-8 flex justify-between items-center text-muted-foreground text-sm">
-            <p>&copy; 2025 GoSports. All rights reserved.</p>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-primary transition">
-                Twitter
-              </a>
-              <a href="#" className="hover:text-primary transition">
-                Instagram
-              </a>
-              <a href="#" className="hover:text-primary transition">
-                Facebook
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }
