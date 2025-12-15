@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { MapPin, Calendar } from "lucide-react"
-import { Header } from "@/components/header"
-import { Button } from "@/components/ui/button"
-import { getEventById } from "../../../api/event"
-import { createCheckout } from "@/app/api/stripe"
-import { Footer } from "@/components/footer"
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { MapPin, Calendar } from "lucide-react";
+import { Header } from "@/components/header";
+import { Button } from "@/components/ui/button";
+import { getEventById } from "../../../api/event";
+import { createCheckout } from "@/app/api/stripe";
+import { Footer } from "@/components/footer";
 
 export default function GetTicketsPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -51,15 +51,10 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
         age: "",
         gender: "",
         attendeeEmail: "",
-        tshirtSize: "",
-        raceCategory: "",
-        teamName: "",
       }));
       setAttendees(initial);
     }
   }, [quantity, eventData]);
-
-  console.log("events data", eventData);
 
   // State
   const [form, setForm] = useState({
@@ -67,15 +62,8 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
     lastName: "",
     email: "",
     phone: "",
-    name: "",
-    idNumber: "",
-    age: "",
-    gender: "",
-    attendeeEmail: "",
-    tshirtSize: "",
-    raceCategory: "",
-    teamName: "",
     agree: false,
+    teamName: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,6 +80,18 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
     const updated = [...attendees];
     updated[index][field] = value;
     setAttendees(updated);
+  };
+
+  // Validate all attendees before proceeding
+  const validateAttendees = () => {
+    for (let i = 0; i < attendees.length; i++) {
+      const attendee = attendees[i];
+      if (!attendee.name || !attendee.idNumber) {
+        alert(`Please fill in all required fields for Attendee ${i + 1}`);
+        return false;
+      }
+    }
+    return true;
   };
 
   // Function to save registration with pending status
@@ -112,16 +112,16 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
         email: form.email,
         phone: form.phone,
       },
-      attendeeInfo: {
-        name: form.name,
-        idNumber: form.idNumber,
-        age: form.age,
-        gender: form.gender,
-        email: form.attendeeEmail,
-        tshirtSize: form.tshirtSize,
-        raceCategory: form.raceCategory,
+      // Attendee info as an array
+      attendeeInfo: attendees.map((attendee) => ({
+        name: attendee.name,
+        idNumber: attendee.idNumber,
+        age: attendee.age,
+        gender: attendee.gender,
+        email: attendee.attendeeEmail,
         teamName: form.teamName,
-      },
+
+      })),
       paymentInfo: {
         subtotal: eventData.perTicketPrice * quantity,
         total: total,
@@ -142,12 +142,10 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
         ...registrationData,
       };
 
-      localStorage.setItem(
-        "currentRegistration",
-        JSON.stringify(newRegistration)
-      );
+      localStorage.setItem("currentRegistration", JSON.stringify(newRegistration));
 
       console.log("Registration saved with ID:", registrationId);
+      console.log("Attendees saved:", registrationData.attendeeInfo);
       return registrationId;
     } catch (error) {
       console.error("Error saving registration:", error);
@@ -161,9 +159,15 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
       !form.lastName ||
       !form.email ||
       !form.phone ||
-      !form.agree
+      !form.agree ||
+      !form.teamName
     ) {
-      alert("Please fill in all required fields.");
+      alert("Please fill in all required billing fields.");
+      return;
+    }
+
+    // Validate all attendees
+    if (!validateAttendees()) {
       return;
     }
 
@@ -178,7 +182,7 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
         eventName: eventData.eventName,
         quantity: quantity,
         totalAmount: total,
-        participantId: registrationId, // OPTIONAL but useful
+        participantId: registrationId,
       };
 
       const res = await createCheckout(checkoutData);
@@ -280,6 +284,21 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
               </div>
             </div>
 
+            {/* Team Name */}
+            <div>
+              <h2 className="text-xl font-bold mb-4">Team Information</h2>
+              <div className="mb-4">
+                <input
+                  name="teamName"
+                  placeholder="Team Name"
+                  value={form.teamName}
+                  onChange={handleChange}
+                  required
+                  className="border border-border rounded-md px-4 py-2 bg-background"
+                />
+              </div>
+            </div>
+
             {/* Attendee Info */}
             <div>
               <h2 className="text-xl font-bold mb-4">
@@ -295,7 +314,7 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <input
-                      placeholder="Name"
+                      placeholder="Name *"
                       value={att.name}
                       onChange={(e) =>
                         handleAttendeeChange(index, "name", e.target.value)
@@ -305,7 +324,7 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
                     />
 
                     <input
-                      placeholder="Identification Number"
+                      placeholder="Identification Number *"
                       value={att.idNumber}
                       onChange={(e) =>
                         handleAttendeeChange(index, "idNumber", e.target.value)
@@ -338,6 +357,7 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
                     </select>
 
                     <input
+                      type="email"
                       placeholder="Email Address"
                       value={att.attendeeEmail}
                       onChange={(e) =>
@@ -349,8 +369,8 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
                       }
                       className="border border-border rounded-md px-4 py-2 bg-background"
                     />
-{/* 
-                    <select
+
+                    {/* <select
                       value={att.tshirtSize}
                       onChange={(e) =>
                         handleAttendeeChange(
@@ -361,15 +381,15 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
                       }
                       className="border border-border rounded-md px-4 py-2 bg-background"
                     >
-                      <option value="">Select T shirt Size</option>
+                      <option value="">Select T-shirt Size</option>
                       {eventData?.availableTshirtSizes?.map((size: string) => (
                         <option key={size} value={size}>
                           {size}
                         </option>
                       ))}
-                    </select> */}
+                    </select>
 
-                    {/* <select
+                    <select
                       value={att.raceCategory}
                       onChange={(e) =>
                         handleAttendeeChange(
@@ -388,14 +408,14 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
                       ))}
                     </select> */}
 
-                    <input
+                    {/* <input
                       placeholder="Team Name"
                       value={att.teamName}
                       onChange={(e) =>
                         handleAttendeeChange(index, "teamName", e.target.value)
                       }
                       className="border border-border rounded-md px-4 py-2 bg-background"
-                    />
+                    /> */}
                   </div>
                 </div>
               ))}
