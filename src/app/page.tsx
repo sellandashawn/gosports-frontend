@@ -301,7 +301,6 @@ export default function Home() {
                 Next 3 months of amazing sporting experiences
               </p>
             </div>
-
             <Link
               href="/events"
               className="text-primary hover:text-primary/80 transition flex items-center gap-2 font-semibold whitespace-nowrap"
@@ -310,35 +309,34 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* ===================== LOADING ===================== */}
-          {loading && (
+          {loading ? (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
               <p className="text-muted-foreground">Loading events...</p>
             </div>
-          )}
-
-          {/* ===================== ERROR ===================== */}
-          {!loading && error && (
+          ) : error ? (
             <div className="text-center py-12">
               <p className="text-red-500 mb-4">{error}</p>
               <button
                 onClick={() => window.location.reload()}
                 className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:opacity-90 transition font-semibold text-sm"
               >
-                Reload
+                Try Again
               </button>
             </div>
-          )}
-
-          {/* ===================== EVENTS GRID ===================== */}
-          {!loading && !error && futureEvents.length > 0 && (
+          ) : futureEvents.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No upcoming events found.</p>
+              <p className="text-muted-foreground text-sm mt-2">
+                Check back soon for new events!
+              </p>
+            </div>
+          ) : (
             <>
               <div className="grid md:grid-cols-3 gap-8">
                 {futureEvents.slice(0, visibleEvents).map((event) => (
-                  <Link
+                  <div
                     key={event.id}
-                    href={`/events/${event.id}`}
                     className="bg-card rounded-xl overflow-hidden border border-border hover:border-primary transition group cursor-pointer"
                   >
                     <div className="relative h-64 overflow-hidden bg-muted">
@@ -347,71 +345,65 @@ export default function Home() {
                         alt={event.eventName}
                         className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                       />
-
-                      {/* Date badge */}
                       <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold">
-                        {new Date(event.date).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
+                        {new Date(event.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
                         })}
                       </div>
+                      <div className="absolute top-4 left-4 bg-background/80 text-foreground px-3 py-1 rounded-full text-xs font-semibold">
+                        {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                      </div>
                     </div>
-
                     <div className="p-6">
-                      <h3 className="text-xl font-bold mb-3">
-                        {event.eventName}
-                      </h3>
-
+                      <h3 className="text-xl font-bold mb-3">{event.eventName}</h3>
                       <div className="space-y-3 mb-6">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <MapPin size={16} />
-                          <span className="text-sm">
-                            {event.venue || "Venue TBA"}
-                          </span>
+                          <span className="text-sm">{event.venue || "Location TBA"}</span>
                         </div>
-
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Calendar size={16} />
                           <span className="text-sm">
-                            {new Date(event.date).toLocaleDateString()}
+                            {new Date(event.date).toLocaleDateString('en-US', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
                           </span>
                         </div>
-
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Users size={16} />
                           <span className="text-sm">
-                            {event.ticketStatus?.maximumOccupancy || 0}{" "}
-                            participants
+                            {event.ticketStatus?.maximumOccupancy || 'N/A'} participants
                           </span>
                         </div>
                       </div>
-
-                      <button className="w-full bg-primary text-primary-foreground py-2 rounded-lg hover:opacity-90 transition font-semibold text-sm">
-                        View Details
-                      </button>
+                      <Link
+                        href={`/events/${event.id}`}
+                        className="block"
+                      >
+                        <button className="w-full bg-primary text-primary-foreground py-2 rounded-lg hover:opacity-90 transition font-semibold text-sm">
+                          View Details
+                        </button>
+                      </Link>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
 
-              {futureEvents.length > visibleEvents && (
+              {visibleEvents < futureEvents.length && (
                 <div className="text-center mt-12">
                   <button
                     onClick={() => setVisibleEvents(futureEvents.length)}
                     className="bg-primary text-primary-foreground px-8 py-3 rounded-lg hover:opacity-90 transition font-semibold"
                   >
-                    View All Events
+                    View All Events ({futureEvents.length})
                   </button>
                 </div>
               )}
             </>
-          )}
-
-          {/* ===================== NO EVENTS ===================== */}
-          {!loading && !error && futureEvents.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No events found.</p>
-            </div>
           )}
         </div>
       </section>
