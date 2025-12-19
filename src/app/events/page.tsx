@@ -144,6 +144,19 @@ export default function EventsPage() {
     return category ? category.name : "N/A";
   };
 
+  const getEventStatus = (eventDate) => {
+    const now = new Date();
+    const eventDateObj = new Date(eventDate);
+
+    if (eventDateObj.toDateString() === now.toDateString()) {
+      return "ongoing";
+    } else if (eventDateObj > now) {
+      return "upcoming";
+    } else {
+      return "completed";
+    }
+  };
+
   const filteredEvents = events
     .filter((event) => {
       const matchesSearch =
@@ -156,6 +169,10 @@ export default function EventsPage() {
 
       return matchesSearch && matchesSport;
     })
+    .map((event) => ({
+      ...event,
+      status: getEventStatus(event.date),
+    }))
     .sort((a, b) => {
       if (sortBy === "upcoming") {
         const now = new Date();

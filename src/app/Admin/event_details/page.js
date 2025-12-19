@@ -111,6 +111,12 @@ export default function EventDetails() {
     }
   };
 
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split("T")[0];
+  };
+
   // getCategoryName function
   const getCategoryName = (categoryIdentifier) => {
     if (!categoryIdentifier) return "N/A";
@@ -793,6 +799,7 @@ export default function EventDetails() {
                       name="date"
                       value={formData.date}
                       onChange={handleChange}
+                      min={getTomorrowDate()}
                       className="text-black w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/60 focus:bg-white transition-all"
                       required
                     />

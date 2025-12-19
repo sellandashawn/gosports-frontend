@@ -77,6 +77,11 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
     field: string,
     value: string
   ) => {
+    if (field === "age" && parseInt(value) <= 0) {
+      alert("Age must be greater than 0");
+      return;
+    }
+
     const updated = [...attendees];
     updated[index][field] = value;
     setAttendees(updated);
@@ -86,8 +91,8 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
   const validateAttendees = () => {
     for (let i = 0; i < attendees.length; i++) {
       const attendee = attendees[i];
-      if (!attendee.name || !attendee.idNumber) {
-        alert(`Please fill in all required fields for Attendee ${i + 1}`);
+      if (!attendee.name || !attendee.idNumber || parseInt(attendee.age) <= 0) {
+        alert(`Please fill in all required fields for Attendee ${i + 1} and ensure age is greater than 0`);
         return false;
       }
     }
@@ -104,6 +109,7 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
       eventtime: eventData.time,
       eventimage: eventData.image,
       quantity: quantity,
+      perTicketPrice: eventData.perTicketPrice,
       totalAmount: total,
       status: "pending",
       billingInfo: {
@@ -181,7 +187,7 @@ export default function GetTicketsPage({ params }: { params: { id: string } }) {
         eventId: eventId,
         eventName: eventData.eventName,
         quantity: quantity,
-        totalAmount: total,
+        totalAmount: eventData.perTicketPrice,
         participantId: registrationId,
       };
 
