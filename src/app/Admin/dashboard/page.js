@@ -134,6 +134,59 @@ const groupByMonth = (data, dateKey) => {
   return grouped;
 };
 
+const generateIndividualEventChartData = (event, userData = []) => {
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  // Initialize chart data with all months
+  const chartData = months.map((month) => ({
+    name: month,
+    registrations: 0,
+    sales: 0,
+    revenue: 0,
+  }));
+
+  // Process user data for this event
+  userData.forEach((participant) => {
+    const date = new Date(participant.createdAt || participant.date);
+    const monthIndex = date.getMonth();
+    const monthName = months[monthIndex];
+
+    const monthData = chartData.find((m) => m.name === monthName);
+    if (monthData) {
+      monthData.registrations += 1;
+      monthData.sales += participant.numberOfTickets || 1;
+      monthData.revenue += participant.amount || 0;
+    }
+  });
+
+  // Add event-specific data
+  const eventDate = new Date(event.date);
+  const eventMonthIndex = eventDate.getMonth();
+  const eventMonthName = months[eventMonthIndex];
+
+  const eventMonthData = chartData.find((m) => m.name === eventMonthName);
+  if (eventMonthData) {
+    const occupancy = event.ticketStatus?.maximumOccupancy || 1;
+    const players = event.ticketStatus?.totalNumberOfPlayers || 0;
+    eventMonthData.engagement = Math.round((players / occupancy) * 100);
+  }
+
+  return chartData;
+};
+
 // Calculate participation rate
 const calculateParticipationRate = (totalPlayers, maximumOccupancy) => {
   if (!maximumOccupancy || maximumOccupancy === 0) return 0;
@@ -369,6 +422,7 @@ export default function DashBoard() {
   const [aggregatedStats, setAggregatedStats] = useState(null);
   const [dynamicChartData, setDynamicChartData] = useState([]);
   const [showAggregateView, setShowAggregateView] = useState(true);
+  const [loadingEventData, setLoadingEventData] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -392,6 +446,26 @@ export default function DashBoard() {
 
     fetchCategoriesData();
   }, []);
+
+  const defaultChartData = [
+    { name: "Jan", registrations: 0, sales: 0 },
+    { name: "Feb", registrations: 0, sales: 0 },
+    { name: "Mar", registrations: 0, sales: 0 },
+    { name: "Apr", registrations: 0, sales: 0 },
+    { name: "May", registrations: 0, sales: 0 },
+    { name: "Jun", registrations: 0, sales: 0 },
+    { name: "Jul", registrations: 0, sales: 0 },
+    { name: "Aug", registrations: 0, sales: 0 },
+    { name: "Sep", registrations: 0, sales: 0 },
+    { name: "Oct", registrations: 0, sales: 0 },
+    { name: "Nov", registrations: 0, sales: 0 },
+    { name: "Dec", registrations: 0, sales: 0 },
+  ];
+
+  const defaultParticipationRate = [
+    { name: "Participated", value: 0 },
+    { name: "Available", value: 100 },
+  ];
 
   // Default stats when no event is selected
   const defaultStats = [
@@ -542,84 +616,17 @@ export default function DashBoard() {
       const aggregateParticipationRate =
         generateAggregateParticipationRate(filteredEvents);
       setParticipationRate(aggregateParticipationRate);
-    } else if (selectedEvent && userdata.length > 0) {
-      const registrationByMonth = groupByMonth(userdata, "createdAt");
+    } else if (selectedEvent) {
+      const individualChartData = generateIndividualEventChartData(
+        selectedEvent,
+        userdata
+      );
+      setDynamicChartData(individualChartData);
 
-      // Create chart data for this specific event
-      const eventChartData = [
-        { name: "Jan", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-        { name: "Feb", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-        { name: "Mar", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-        { name: "Apr", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-        { name: "May", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-        { name: "Jun", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-        { name: "Jul", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-        { name: "Aug", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-        { name: "Sep", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-        { name: "Oct", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-        { name: "Nov", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-        { name: "Dec", registrations: 0, sales: 0, engagement: 0, revenue: 0 },
-      ];
+      // Set ticket sales data (same as registration for now, or you can separate if needed)
+      setTicketSales(individualChartData);
 
-      // Populate with actual data for this event
-      registrationByMonth.forEach((monthData) => {
-        const monthIndex = eventChartData.findIndex(
-          (m) => m.name === monthData.name
-        );
-        if (monthIndex !== -1) {
-          eventChartData[monthIndex].registrations = monthData.registrations;
-          eventChartData[monthIndex].sales = monthData.sales;
-
-          // Calculate engagement for this event
-          const maxOccupancy =
-            selectedEvent.ticketStatus?.maximumOccupancy || 1;
-          const totalPlayers =
-            selectedEvent.ticketStatus?.totalNumberOfPlayers || 0;
-          eventChartData[monthIndex].engagement = Math.round(
-            (totalPlayers / maxOccupancy) * 100
-          );
-
-          // Calculate revenue (sum of payments for this event)
-          const eventMonth = new Date(selectedEvent.date).getMonth();
-          const monthName = [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
-          ][eventMonth];
-          if (monthData.name === monthName) {
-            // Find payments for this event
-            const eventPayments = payments.filter((payment) => {
-              if (payment.event) {
-                return (
-                  payment.event.id === selectedEvent.id ||
-                  payment.event._id === selectedEvent.id ||
-                  payment.eventId === selectedEvent.id
-                );
-              }
-              return false;
-            });
-
-            const totalRevenue = eventPayments.reduce(
-              (sum, payment) => sum + (payment.amount || 0),
-              0
-            );
-            eventChartData[monthIndex].revenue = totalRevenue;
-          }
-        }
-      });
-
-      setDynamicChartData(eventChartData);
-
-      // Calculate participation rate for this specific event
+      // Calculate participation rate for individual event
       const maxOccupancy = selectedEvent.ticketStatus?.maximumOccupancy || 0;
       const totalPlayers =
         selectedEvent.ticketStatus?.totalNumberOfPlayers || 0;
@@ -629,8 +636,9 @@ export default function DashBoard() {
         { name: "Available", value: 100 - rate },
       ]);
     } else {
-      setDynamicChartData([]);
-      setParticipationRate([]);
+      // Reset to default data
+      setDynamicChartData(defaultChartData);
+      setParticipationRate(defaultParticipationRate);
     }
   }, [
     showAggregateView,
@@ -690,10 +698,15 @@ export default function DashBoard() {
       if (!selectedEvent?.id) return;
 
       try {
+        setLoadingEventData(true);
         const response = await getEventParticipants(selectedEvent.id);
-        console.log("patienid", selectedEvent.id);
+        console.log("Event ID:", selectedEvent.id);
+        console.log("Participants response:", response);
+
         if (response && response.data) {
-          const participants = response.data.participants || [];
+          const participants =
+            response.data.participants || response.data || [];
+          console.log("Participants data:", participants);
           setUserData(participants);
 
           // Update stats with user data count
@@ -702,11 +715,15 @@ export default function DashBoard() {
         }
       } catch (error) {
         console.error("Error fetching participants:", error);
+      } finally {
+        setLoadingEventData(false);
       }
     };
 
-    fetchUsers();
-  }, [selectedEvent]);
+    if (selectedEvent && !showAggregateView) {
+      fetchUsers();
+    }
+  }, [selectedEvent, showAggregateView]);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -739,6 +756,8 @@ export default function DashBoard() {
     setSelectedEvent(event);
     setEventId(event.id);
     setShowAggregateView(false);
+    setUserData([]);
+    setDynamicChartData(defaultChartData);
 
     console.log("Selected event:", event);
   };
@@ -756,6 +775,7 @@ export default function DashBoard() {
     setUserData([]);
     setStats(defaultStats);
     setShowAggregateView(true);
+    setDynamicChartData(defaultChartData);
   };
 
   const handleFilterChange = (filterName, value) => {
@@ -798,8 +818,10 @@ export default function DashBoard() {
     if (!newShowAggregateView) {
       setSelectedEvent(null);
       setStats(defaultStats);
+      setDynamicChartData(defaultChartData);
     } else {
       setSelectedEvent(null);
+      setUserData([]);
 
       if (filteredEvents.length > 0 && aggregatedStats) {
         const newStats = getEventStats(null, [], aggregatedStats);
@@ -816,33 +838,15 @@ export default function DashBoard() {
     { date: "25/01/2026", amount: "$5,000", status: "Completed" },
   ];
 
-  // Default empty data for charts when no event is selected
-  const defaultChartData = [
-    { name: "Jan", registrations: 0, sales: 0 },
-    { name: "Feb", registrations: 0, sales: 0 },
-    { name: "Mar", registrations: 0, sales: 0 },
-    { name: "Apr", registrations: 0, sales: 0 },
-    { name: "May", registrations: 0, sales: 0 },
-    { name: "Jun", registrations: 0, sales: 0 },
-    { name: "Jul", registrations: 0, sales: 0 },
-    { name: "Aug", registrations: 0, sales: 0 },
-    { name: "Sep", registrations: 0, sales: 0 },
-    { name: "Oct", registrations: 0, sales: 0 },
-    { name: "Nov", registrations: 0, sales: 0 },
-    { name: "Dec", registrations: 0, sales: 0 },
-  ];
-
-  // Default participation rate when no event is selected
-  const defaultParticipationRate = [
-    { name: "Participated", value: 0 },
-    { name: "Available", value: 100 },
-  ];
-
   // Determine which chart data to use
   const chartDataToUse =
     dynamicChartData.length > 0 ? dynamicChartData : defaultChartData;
   const participationRateToUse =
     participationRate.length > 0 ? participationRate : defaultParticipationRate;
+
+  const hasChartData = chartDataToUse.some(
+    (item) => item.registrations > 0 || item.sales > 0
+  );
 
   // Status options for filter dropdown
   const statusOptions = [
@@ -1214,19 +1218,34 @@ export default function DashBoard() {
                   </span>
                 ) : null}
               </h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={chartDataToUse}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar
-                    dataKey="registrations"
-                    fill="var(--primary)"
-                    radius={[8, 8, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+
+              {loadingEventData ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <span className="ml-2 text-slate-600">
+                    Loading event data...
+                  </span>
+                </div>
+              ) : hasChartData ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={chartDataToUse}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar
+                      dataKey="registrations"
+                      fill="var(--primary)"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-64 text-slate-500">
+                  No registration data available
+                  {selectedEvent && " for this event"}
+                </div>
+              )}
             </div>
 
             {/* Participation Pie Chart */}
@@ -1244,56 +1263,77 @@ export default function DashBoard() {
                 ) : null}
               </h3>
               <div className="flex flex-col items-center">
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={participationRateToUse}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={90}
-                      dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}%`}
-                    >
-                      {participationRateToUse.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={
-                            index === 0 ? "var(--primary)" : "rgb(229 231 235)"
-                          }
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-                {selectedEvent && (
-                  <div className="mt-2 text-center text-sm text-slate-600">
-                    <p>
-                      Maximum Occupancy:{" "}
-                      {selectedEvent.ticketStatus?.maximumOccupancy || 0}
-                    </p>
-                    <p>
-                      Total Players:{" "}
-                      {selectedEvent.ticketStatus?.totalNumberOfPlayers || 0}
-                    </p>
-                    <p className="font-semibold">
-                      Participation Rate:{" "}
-                      {participationRateToUse[0]?.value || 0}%
-                    </p>
+                {loadingEventData ? (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <span className="ml-2 text-slate-600">
+                      Loading event data...
+                    </span>
                   </div>
-                )}
-                {showAggregateView && filteredEvents.length > 0 && (
-                  <div className="mt-2 text-center text-sm text-slate-600">
-                    <p>
-                      Total Maximum Occupancy:{" "}
-                      {aggregatedStats?.maximumOccupancy || 0}
-                    </p>
-                    <p>Total Players: {aggregatedStats?.totalPlayers || 0}</p>
-                    <p className="font-semibold">
-                      Aggregate Participation Rate:{" "}
-                      {participationRateToUse[0]?.value || 0}%
-                    </p>
+                ) : participationRateToUse[0]?.value > 0 ? (
+                  <>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={participationRateToUse}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          dataKey="value"
+                          label={({ name, value }) => `${name}: ${value}%`}
+                        >
+                          {participationRateToUse.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={
+                                index === 0
+                                  ? "var(--primary)"
+                                  : "rgb(229 231 235)"
+                              }
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {selectedEvent && (
+                      <div className="mt-2 text-center text-sm text-slate-600">
+                        <p>
+                          Maximum Occupancy:{" "}
+                          {selectedEvent.ticketStatus?.maximumOccupancy || 0}
+                        </p>
+                        <p>
+                          Total Players:{" "}
+                          {selectedEvent.ticketStatus?.totalNumberOfPlayers ||
+                            0}
+                        </p>
+                        <p className="font-semibold">
+                          Participation Rate:{" "}
+                          {participationRateToUse[0]?.value || 0}%
+                        </p>
+                      </div>
+                    )}
+                    {showAggregateView && filteredEvents.length > 0 && (
+                      <div className="mt-2 text-center text-sm text-slate-600">
+                        <p>
+                          Total Maximum Occupancy:{" "}
+                          {aggregatedStats?.maximumOccupancy || 0}
+                        </p>
+                        <p>
+                          Total Players: {aggregatedStats?.totalPlayers || 0}
+                        </p>
+                        <p className="font-semibold">
+                          Aggregate Participation Rate:{" "}
+                          {participationRateToUse[0]?.value || 0}%
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center h-64 text-slate-500">
+                    No participation data available
+                    {selectedEvent && " for this event"}
                   </div>
                 )}
               </div>
@@ -1313,19 +1353,34 @@ export default function DashBoard() {
                   </span>
                 ) : null}
               </h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={chartDataToUse}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar
-                    dataKey="sales"
-                    fill="var(--primary)"
-                    radius={[8, 8, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+
+              {loadingEventData ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <span className="ml-2 text-slate-600">
+                    Loading event data...
+                  </span>
+                </div>
+              ) : hasChartData ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={chartDataToUse}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar
+                      dataKey="sales"
+                      fill="var(--primary)"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-64 text-slate-500">
+                  No ticket sales data available
+                  {selectedEvent && " for this event"}
+                </div>
+              )}
             </div>
 
             {/* Attendee Engagement */}

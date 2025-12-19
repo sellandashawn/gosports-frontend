@@ -3,10 +3,22 @@
 import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { CheckCircle, Calendar, MapPin, Download, Share2 } from "lucide-react"
+import { CheckCircle, Calendar, MapPin, Download, Share2, User } from "lucide-react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { registerParticipantWithPayment } from '../api/participant'
+import { Footer } from "@/components/footer";
+
+interface AttendeeInfo {
+  name: string
+  idNumber: string
+  age: string
+  gender: string
+  email: string
+  // tshirtSize: string
+  // raceCategory: string
+  teamName: string
+}
 
 interface RegistrationData {
   id: string
@@ -21,22 +33,16 @@ interface RegistrationData {
     email: string
     phone: string
   }
-  attendeeInfo: {
-    name: string
-    idNumber: string
-    age: string
-    gender: string
-    email: string
-    tshirtSize: string
-    raceCategory: string
-    teamName: string
-  }
+  attendeeInfo: AttendeeInfo[]
   paymentInfo: {
     subtotal: number
     total: number
     status: string
   }
   createdAt: string
+  eventDate: string
+  eventvenue: string
+  eventimage: string
 }
 
 export default function PaymentSuccessPage() {
@@ -44,6 +50,7 @@ export default function PaymentSuccessPage() {
   const [isClient, setIsClient] = useState(false)
   const [registrationData, setRegistrationData] = useState<RegistrationData | null>(null)
   const [isProcessing, setIsProcessing] = useState(true)
+  const [registrationResult, setRegistrationResult] = useState<any>(null)
   const hasProcessed = useRef(false)
 
   useEffect(() => {
@@ -77,14 +84,17 @@ export default function PaymentSuccessPage() {
         billingLastName: registration.billingInfo.lastName || '',
         billingEmail: registration.billingInfo.email || '',
         billingPhone: registration.billingInfo.phone || '',
-        attendeeName: registration.attendeeInfo.name || '',
-        identificationNumber: registration.attendeeInfo.idNumber || '',
-        age: registration.attendeeInfo.age || '',
-        gender: registration.attendeeInfo.gender || '',
-        attendeeEmail: registration.attendeeInfo.email || '',
-        tshirtSize: registration.attendeeInfo.tshirtSize || '',
-        raceCategory: registration.attendeeInfo.raceCategory || '',
-        teamName: registration.attendeeInfo.teamName || '',
+        attendees: registration.attendeeInfo.map(attendee => ({
+          name: attendee.name || '',
+          idNumber: attendee.idNumber || '',
+          age: attendee.age || '',
+          gender: attendee.gender || '',
+          attendeeEmail: attendee.email || '',
+          // tshirtSize: attendee.tshirtSize || '',
+          // raceCategory: attendee.raceCategory || '',
+          teamName: attendee.teamName || '',
+        })),
+        teamName: registration.attendeeInfo[0]?.teamName || '',
         amount: registration.totalAmount,
         numberOfTickets: registration.quantity,
         paymentDate: new Date().toISOString()
@@ -93,6 +103,7 @@ export default function PaymentSuccessPage() {
       console.log('Participant Data:', participantData)
 
       const result = await registerParticipantWithPayment(registration.eventId, participantData)
+      setRegistrationResult(result)
 
       console.log('Registration successful:', result)
 
@@ -156,11 +167,12 @@ export default function PaymentSuccessPage() {
         subtotal: registrationData.paymentInfo.subtotal
       }
     ],
-    attendee: {
+    billingInfo: {
       name: registrationData.billingInfo.firstName + ' ' + registrationData.billingInfo.lastName,
       email: registrationData.billingInfo.email,
       phone: registrationData.billingInfo.phone
     },
+    attendees: registrationData.attendeeInfo,
     payment: {
       method: "Credit Card",
       amount: registrationData.paymentInfo.subtotal,
@@ -183,15 +195,23 @@ export default function PaymentSuccessPage() {
           </div>
           <h1 className="text-4xl font-bold mb-4">Payment Successful!</h1>
           <p className="text-xl text-muted-foreground mb-2">
-            Thank you for your purchase. Your tickets have been confirmed.
+            Thank you for your purchase. Your {registrationData.quantity} ticket{registrationData.quantity > 1 ? 's' : ''} have been confirmed.
           </p>
 
           <div className="flex items-center justify-center gap-2 mb-2">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <span className="text-sm text-green-600">
-              Confirmation email sent to {orderSummary.attendee.email}
+              Confirmation email sent to {orderSummary.billingInfo.email}
             </span>
           </div>
+
+          {registrationResult?.data?.participant?.ticketNumbers && (
+            <div className="mt-4">
+              <p className="text-sm text-muted-foreground">
+                Ticket Numbers: {registrationResult.data.participant.ticketNumbers.join(', ')}
+              </p>
+            </div>
+          )}
 
           <p className="text-sm text-muted-foreground">
             Order ID: {orderSummary.orderId} • {orderSummary.payment.date}
@@ -222,58 +242,107 @@ export default function PaymentSuccessPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="w-full md:w-48 h-32 bg-muted rounded-lg flex items-center justify-center">
-                    <img src={orderSummary.event.image} alt="Event" className="object-cover w-full h-full rounded-lg" />
+                  <div className="w-full md:w-48 h-32 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                    {orderSummary.event.image ? (
+                      <img
+                        src={orderSummary.event.image}
+                        alt="Event"
+                        className="object-cover w-full h-full rounded-lg"
+                      />
+                    ) : (
+                      <div className="text-muted-foreground">No image</div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Attendee Information */}
+              {/* Billing Information */}
               <div className="bg-card border border-border rounded-xl p-6">
-                <h2 className="text-2xl font-bold mb-4">Attendee Information</h2>
+                <h2 className="text-2xl font-bold mb-4">Billing Information</h2>
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <label className="text-muted-foreground">Full Name</label>
-                    <p className="font-medium">{orderSummary.attendee.name}</p>
+                    <p className="font-medium">{orderSummary.billingInfo.name}</p>
                   </div>
                   <div>
                     <label className="text-muted-foreground">Email</label>
-                    <p className="font-medium">{orderSummary.attendee.email}</p>
+                    <p className="font-medium">{orderSummary.billingInfo.email}</p>
                   </div>
                   <div>
                     <label className="text-muted-foreground">Phone</label>
-                    <p className="font-medium">{orderSummary.attendee.phone}</p>
+                    <p className="font-medium">{orderSummary.billingInfo.phone}</p>
                   </div>
                   <div>
-                    <label className="text-muted-foreground">Tickets</label>
-                    <p className="font-medium">{orderSummary.tickets[0].quantity} × {orderSummary.tickets[0].type}</p>
+                    <label className="text-muted-foreground">Total Tickets</label>
+                    <p className="font-medium">{orderSummary.tickets[0].quantity}</p>
                   </div>
-                  <div>
-                    <label className="text-muted-foreground">Identification Number</label>
-                    <p className="font-medium">{registrationData.attendeeInfo.idNumber}</p>
-                  </div>
-                  <div>
-                    <label className="text-muted-foreground">Gender</label>
-                    <p className="font-medium">{registrationData.attendeeInfo.gender || 'Not specified'}</p>
-                  </div>
-                  {registrationData.attendeeInfo.tshirtSize && (
-                    <div>
-                      <label className="text-muted-foreground">T-Shirt Size</label>
-                      <p className="font-medium">{registrationData.attendeeInfo.tshirtSize}</p>
+                </div>
+              </div>
+
+              {/* Attendees Information */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <h2 className="text-2xl font-bold mb-4">
+                  Attendees Information ({registrationData.quantity} {registrationData.quantity === 1 ? 'Person' : 'People'})
+                </h2>
+                <div className="space-y-6">
+                  {orderSummary.attendees.map((attendee, index) => (
+                    <div key={index} className="border border-border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="font-semibold">Attendee {index + 1}</h3>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <label className="text-muted-foreground">Full Name</label>
+                          <p className="font-medium">{attendee.name}</p>
+                        </div>
+                        <div>
+                          <label className="text-muted-foreground">ID Number</label>
+                          <p className="font-medium">{attendee.idNumber}</p>
+                        </div>
+                        <div>
+                          <label className="text-muted-foreground">Email</label>
+                          <p className="font-medium">{attendee.email || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <label className="text-muted-foreground">Age</label>
+                          <p className="font-medium">{attendee.age || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <label className="text-muted-foreground">Gender</label>
+                          <p className="font-medium">{attendee.gender || 'Not specified'}</p>
+                        </div>
+                        {/* {attendee.tshirtSize && (
+                          <div>
+                            <label className="text-muted-foreground">T-Shirt Size</label>
+                            <p className="font-medium">{attendee.tshirtSize}</p>
+                          </div>
+                        )}
+                        {attendee.raceCategory && (
+                          <div>
+                            <label className="text-muted-foreground">Race Category</label>
+                            <p className="font-medium">{attendee.raceCategory}</p>
+                          </div>
+                        )} */}
+                        {attendee.teamName && (
+                          <div>
+                            <label className="text-muted-foreground">Team Name</label>
+                            <p className="font-medium">{attendee.teamName}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {registrationResult?.data?.participant?.ticketNumbers?.[index] && (
+                        <div className="mt-3 pt-3 border-t border-border">
+                          <label className="text-muted-foreground text-sm">Ticket Number</label>
+                          <p className="font-medium text-green-600">
+                            {registrationResult.data.participant.ticketNumbers[index]}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {registrationData.attendeeInfo.raceCategory && (
-                    <div>
-                      <label className="text-muted-foreground">Race Category</label>
-                      <p className="font-medium">{registrationData.attendeeInfo.raceCategory}</p>
-                    </div>
-                  )}
-                  {registrationData.attendeeInfo.teamName && (
-                    <div>
-                      <label className="text-muted-foreground">Team Name</label>
-                      <p className="font-medium">{registrationData.attendeeInfo.teamName}</p>
-                    </div>
-                  )}
+                  ))}
                 </div>
               </div>
             </div>
@@ -289,6 +358,9 @@ export default function PaymentSuccessPage() {
                     <div key={ticket.id} className="flex justify-between text-sm">
                       <div>
                         <p className="font-medium">{ticket.quantity} × {ticket.type}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {ticket.quantity} attendee{ticket.quantity > 1 ? 's' : ''}
+                        </p>
                       </div>
                       <p className="font-medium">${ticket.subtotal}</p>
                     </div>
@@ -325,6 +397,19 @@ export default function PaymentSuccessPage() {
                     </div>
                   </div>
                 </div>
+
+                {registrationResult?.data?.participant?.ticketNumbers && (
+                  <div className="border-t border-border pt-4 mt-4">
+                    <div className="text-sm">
+                      <label className="text-muted-foreground">Tickets Generated</label>
+                      <div className="mt-1">
+                        <span className="text-green-600 font-medium">
+                          {registrationResult.data.participant.ticketNumbers.length} ticket{registrationResult.data.participant.ticketNumbers.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -373,14 +458,7 @@ export default function PaymentSuccessPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-card border-t border-border py-8 px-6 md:px-8 mt-16">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm text-muted-foreground">
-            © 2025 GoSports. All rights reserved. Developed by Fillorie.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }

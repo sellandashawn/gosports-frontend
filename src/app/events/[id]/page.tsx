@@ -126,7 +126,11 @@ export default function EventDetailPage({ params }: { params: { id: string }; })
     if (eventData) {
       const eventDate = new Date(eventData.date);
       const today = new Date();
-      const isUpcomingOrOngoing = eventDate >= today;
+
+      const normalizedEventDate = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+      const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+      const isUpcomingOrOngoing = normalizedEventDate >= normalizedToday;
 
       setShouldShowTicketBooking(isUpcomingOrOngoing);
     }
@@ -385,7 +389,7 @@ export default function EventDetailPage({ params }: { params: { id: string }; })
             </div>
           )}
 
-          {/* Event Ended/Sold Out Message */}
+          {/* Event Ended/Sold Out Message - Only show if event is in the past */}
           {!shouldShowTicketBooking && (
             <div className="md:col-span-3 mt-8">
               <div className="bg-card border border-border rounded-xl p-8 text-center">
