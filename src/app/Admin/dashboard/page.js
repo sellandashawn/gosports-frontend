@@ -604,7 +604,6 @@ export default function DashBoard() {
     }
   }, [events]);
 
-  // Generate dynamic chart data when filters or user data changes
   useEffect(() => {
     if (showAggregateView && filteredEvents.length > 0) {
       // Show aggregate data for all filtered events
@@ -647,6 +646,7 @@ export default function DashBoard() {
     selectedEvent,
     userdata,
     allParticipants,
+    payments,
   ]);
 
   useEffect(() => {
@@ -674,7 +674,7 @@ export default function DashBoard() {
             return {
               event: event.eventName,
               ticketSold: ticketsSold,
-              amount: `Rs.${totalAmount.toLocaleString()}`,
+              amount: `$${totalAmount.toLocaleString()}`,
               status:
                 event.status?.charAt(0).toUpperCase() + event.status?.slice(1),
               eventId: event.id,
@@ -833,9 +833,9 @@ export default function DashBoard() {
   };
 
   const paymentReports = [
-    { date: "25/11/2025", amount: "Rs.10,000", status: "Completed" },
-    { date: "25/10/2025", amount: "Rs.8,000", status: "Pending" },
-    { date: "25/01/2026", amount: "Rs.5,000", status: "Completed" },
+    { date: "25/11/2025", amount: "$10,000", status: "Completed" },
+    { date: "25/10/2025", amount: "$8,000", status: "Pending" },
+    { date: "25/01/2026", amount: "$5,000", status: "Completed" },
   ];
 
   // Determine which chart data to use
